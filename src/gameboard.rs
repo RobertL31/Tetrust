@@ -3,13 +3,15 @@ use std::fmt::{Debug, Write};
 
 use kiss3d::nalgebra::Vector2;
 
+use colored::Colorize;
+
 use rand_chacha::ChaCha8Rng;
 
 
 use crate::{piece::{Square, Piece}, piece_provider::PieceProvider, piece_factory::{PieceType, SPAWN_POINT}};
 
-const BOARD_WIDTH: usize = 10;
-const BOARD_HEIGHT: usize = 22;
+pub const BOARD_WIDTH: usize = 10;
+pub const BOARD_HEIGHT: usize = 22;
 
 const PLAY_POINT: Vector2<isize> = Vector2::new(4, 20);
 
@@ -26,8 +28,17 @@ pub struct GameBoard {
     game_over: bool
 }
 
+#[derive(Copy, Clone)]
+pub enum MovementDirection {
+    Right,
+    Top,
+    Left,
+    Bottom
+}
+
 pub struct FallError;
 pub struct RotateError;
+pub struct MoveError;
 
 impl GameBoard {
 
@@ -58,6 +69,11 @@ impl GameBoard {
     }
 
 
+    pub fn get_square_board(&self) -> [[Option<Square>; BOARD_HEIGHT]; BOARD_WIDTH] {
+        self.square_board.clone()
+    }
+
+
     pub fn is_free(&self, position: Vector2<isize>) -> bool {
 
         if position.x < 0 || position.x >= BOARD_WIDTH as isize {
@@ -79,7 +95,7 @@ impl GameBoard {
     }
 
 
-    pub fn can_fall(&self) -> bool{
+    fn can_fall(&self) -> bool{
         self.current_piece.get_squares().iter().all(|square|{
             let position = square.get_position();
             self.is_free(Vector2::new(position[0], position[1]-1))
@@ -87,10 +103,28 @@ impl GameBoard {
     }
 
 
-    pub fn can_rotate(&self) -> bool {
+    fn can_rotate(&self) -> bool {
         self.current_piece.get_squares().iter().all(|square| {
             self.is_free(square.get_rotated_position(&self.current_piece.get_rotation_type()))
         })
+    }
+
+
+    fn can_move(&self, direction: MovementDirection) -> bool {
+        match direction {
+            MovementDirection::Left => 
+                self.current_piece.get_squares().iter().all(|square| {
+                    let position = square.get_position();
+                    self.is_free(Vector2::new(position[0]-1, position[1]))
+                }),
+            MovementDirection::Right => 
+                self.current_piece.get_squares().iter().all(|square| {
+                    let position = square.get_position();
+                    self.is_free(Vector2::new(position[0]+1, position[1]))
+                }),
+            MovementDirection::Bottom => self.can_fall(),
+            MovementDirection::Top => true
+        }
     }
 
 
@@ -157,6 +191,38 @@ impl GameBoard {
                 square.set_position(square.get_rotated_position(&rotation))
             }
         }).ok_or(RotateError)
+    }
+
+
+    fn move_at(&mut self, direction: MovementDirection) {
+        match direction {
+            MovementDirection::Left => {
+                for square in self.current_piece.get_squares_mut() {
+                    let actual_pos = square.get_position();
+                    square.set_position(actual_pos + Vector2::new(-1, 0));
+                }
+            },
+            MovementDirection::Right => {
+                for square in self.current_piece.get_squares_mut() {
+                    let actual_pos = square.get_position();
+                    square.set_position(actual_pos + Vector2::new(1,0));
+                }
+            },
+            MovementDirection::Bottom => {
+                for square in self.current_piece.get_squares_mut() {
+                    let actual_pos = square.get_position();
+                    square.set_position(actual_pos + Vector2::new(0, -1));
+                }
+            },
+            MovementDirection::Top => ()
+        }
+    }
+
+
+    pub fn try_move(&mut self, direction: MovementDirection) -> Result<(), MoveError> {
+        self.can_move(direction).then(|| {
+            self.move_at(direction);
+        }).ok_or(MoveError)
     }
 
     

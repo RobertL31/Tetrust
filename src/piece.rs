@@ -256,5 +256,4 @@ mod test {
 
         assert_eq!(result, *sut.get_position())
     }
-
 }

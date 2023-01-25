@@ -1,4 +1,3 @@
-use std::time::Duration;
 
 use std::io::stdin;
 
@@ -6,27 +5,31 @@ use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 
 use crate::gameboard::GameBoard;
-use crate::traits::{Move, FallError};
 
-const GLOBAL_SEED: u64 = 1;
-struct GameManager;
+pub const GLOBAL_SEED: u64 = 1;
+pub struct GameManager;
 
 impl GameManager {
 
-    pub fn start(&self) {
+    pub fn start() {
 
         let rng = ChaCha8Rng::seed_from_u64(GLOBAL_SEED);
 
         let mut board = GameBoard::new(rng);
         
-        loop {
-            board.step();
+        while board.keep_playing() {
+            match board.try_fall() {
+                Ok(_) => (),
+                Err(_) => board.lock_current_piece()
+            }
         }
-        
-        
+
+        println!("{:?}", board);
+
+        GameManager::end();
     }
 
-    pub fn end(&self) {
+    pub fn end() {
         
         let mut s=String::new();
         println!("Please enter some text: ");
@@ -39,7 +42,7 @@ impl GameManager {
         }
         
         if let Some('r') = s.chars().next_back() {
-            self.start();
+            GameManager::start();
         }
     }
 

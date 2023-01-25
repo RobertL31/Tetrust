@@ -18,8 +18,8 @@ impl PieceBag {
         }
     }
 
-    fn get_piece(&mut self) -> Piece {
-        self.pieces.pop().unwrap()
+    fn get_piece(&mut self) -> Option<Piece> {
+        self.pieces.pop()
     }
 
     fn get_bag_size(&self) -> usize {
@@ -46,6 +46,61 @@ impl PieceProvider {
             self.current_bag = PieceBag::new(&mut self.rng);
         }
         
-        self.current_bag.get_piece()
+        self.current_bag.get_piece().unwrap()
+    }
+}
+
+
+mod test {
+
+    use rand::SeedableRng;
+    use rand_chacha::ChaCha8Rng;
+    use crate::piece_factory::PieceType;
+    use crate::{game_manager::GLOBAL_SEED};
+
+    use super::{PieceProvider, PieceBag};
+    
+    #[test]
+    fn ten_first_pieces_are_the_same_for_same_seed(){
+        let rng1 = ChaCha8Rng::seed_from_u64(GLOBAL_SEED);
+        let rng2 = rng1.clone();
+        let mut provider1 = PieceProvider::new(rng1);
+        let mut provider2 = PieceProvider::new(rng2);
+        let mut result = true;
+
+        for _ in 0..10 {
+            let piece1 = provider1.get_piece();
+            let piece2 = provider2.get_piece();
+            result &= piece1 == piece2;
+        }
+
+        assert!(result);
+    }
+
+
+    use std::hash::Hash;
+    use std::collections::HashSet;
+
+    fn has_unique_elements<T>(iter: T) -> bool
+    where
+        T: IntoIterator,
+        T::Item: Eq + Hash,
+    {
+        let mut uniq = HashSet::new();
+        iter.into_iter().all(move |x| uniq.insert(x))
+    }
+
+    #[test]
+    fn every_piece_in_a_bag_is_different() {
+        let mut rng = ChaCha8Rng::seed_from_u64(GLOBAL_SEED);
+        let mut bag = PieceBag::new(&mut rng);
+        let mut pieces = vec![];
+        while let Some(piece) = bag.get_piece(){
+            pieces.push(piece);
+        }
+
+        let result = has_unique_elements(pieces);
+
+        assert!(result);
     }
 }

@@ -4,9 +4,9 @@ use strum_macros::EnumIter;
 
 use crate::piece::{Piece, Square, Color, RotationType};
 
-const SPAWN_POINT: Vector2<isize> = Vector2::new(100, 100);
+pub const SPAWN_POINT: Vector2<isize> = Vector2::new(100, 100);
 
-#[derive(EnumIter, Copy, Clone)]
+#[derive(EnumIter, Copy, Clone, PartialEq, Hash, Debug)]
 pub enum PieceType {
     T,
     LeftL,
@@ -23,17 +23,17 @@ impl PieceFactory {
 
     pub fn get_piece(piece_type: PieceType) -> Piece {
         match piece_type {
-            T => Self::get_T_piece(),
-            LeftL => Self::get_LeftL_piece(),
-            RightL => Self::get_RightL_piece(),
-            LeftSkew => Self::get_LeftSkew_piece(),
-            RightSkew => Self::get_RightSkew_piece(),
-            Square => Self::get_Square_piece(),
-            Straight => Self::get_Straight_piece()
+            PieceType::T => Self::get_t_piece(),
+            PieceType::LeftL => Self::get_left_l_piece(),
+            PieceType::RightL => Self::get_right_l_piece(),
+            PieceType::LeftSkew => Self::get_left_skew_piece(),
+            PieceType::RightSkew => Self::get_right_skew_piece(),
+            PieceType::Square => Self::get_square_piece(),
+            PieceType::Straight => Self::get_straight_piece()
         }
     }
 
-    fn get_T_piece() -> Piece {
+    fn get_t_piece() -> Piece {
         let squares = [
             Square::new(
                 Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
@@ -60,7 +60,7 @@ impl PieceFactory {
         )
     }
 
-    fn get_LeftL_piece() -> Piece {
+    fn get_left_l_piece() -> Piece {
         let squares = [
             Square::new(
                 Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
@@ -87,7 +87,7 @@ impl PieceFactory {
         )
     }
 
-    fn get_RightL_piece() -> Piece {
+    fn get_right_l_piece() -> Piece {
         let squares = [
             Square::new(
                 Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
@@ -114,7 +114,7 @@ impl PieceFactory {
         )
     }
 
-    fn get_LeftSkew_piece() -> Piece {
+    fn get_left_skew_piece() -> Piece {
         let squares = [
             Square::new(
                 Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
@@ -141,14 +141,14 @@ impl PieceFactory {
         )
     }
 
-    fn get_RightSkew_piece() -> Piece {
+    fn get_right_skew_piece() -> Piece {
         let squares = [
             Square::new(
                 SPAWN_POINT,
                 Color::Red
             ),
             Square::new(
-                SPAWN_POINT + Vector2::new(0, 1),
+                SPAWN_POINT + Vector2::new(1, 0),
                 Color::Red
             ),
             Square::new(
@@ -168,7 +168,7 @@ impl PieceFactory {
         )
     }
 
-    fn get_Square_piece() -> Piece {
+    fn get_square_piece() -> Piece {
         let squares = [
             Square::new(
                 SPAWN_POINT,
@@ -195,7 +195,7 @@ impl PieceFactory {
         )
     }
 
-    fn get_Straight_piece() -> Piece {
+    fn get_straight_piece() -> Piece {
         let squares = [
             Square::new(
                 Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),

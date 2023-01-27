@@ -9,6 +9,7 @@ use crate::{gameboard::{GameBoard, MovementDirection, Action}, graphics::{AsciiV
 
 pub const FPS: u32 = 120;
 pub const SLEEP_TIME: f32 = 1.0/FPS as f32;
+pub const SPEED_FACTOR: f32 = 0.8;
 pub struct GameManager;
 
 impl GameManager {
@@ -93,8 +94,8 @@ impl GameManager {
                         hold_lines_cleared != cleared {
                             level += 1;
                             board.set_level(level);
-                            fall_time *= 0.9;
-                            lock_delay *= 0.9;
+                            fall_time *= SPEED_FACTOR;
+                            lock_delay *= SPEED_FACTOR / 2.0;
                             hold_lines_cleared = cleared;   
                         }
                     },

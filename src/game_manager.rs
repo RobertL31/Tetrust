@@ -11,6 +11,7 @@ pub const FALL_TIME: f32 = 1.0 / 4.0;
 pub const GLOBAL_SEED: u64 = 16;
 pub const FPS: u32 = 60;
 pub const SLEEP_TIME: f32 = 1.0/FPS as f32;
+pub const LOCK_DELAY: f32 = 2.0 * FALL_TIME;
 pub struct GameManager;
 
 impl GameManager {
@@ -43,37 +44,49 @@ impl GameManager {
         AsciiVisualizer::display(&board);
         
         let mut last_fall = 0.0;
+        let mut lock_timer = 0.0;
         let mut start = Instant::now();
         while board.keep_playing() {
 
             let _ = match from_thread.try_recv() {
                 Ok(Action::Move(movement)) => {
                     let _ = match board.try_move(movement) {
-                        Ok(_) => (),
+                        Ok(_) => {
+                            match movement {
+                                MovementDirection::Top => lock_timer = LOCK_DELAY,
+                                _ => lock_timer = 0.0
+                            }
+                        }
                         Err(_) => ()
                     };
                 },
                 Ok(Action::Rotate) => {
                     let _ = match board.try_rotate(){
-                        Ok(_) => (),
+                        Ok(_) => lock_timer = 0.0,
                         Err(_) => ()
                     };
                 },
                 Ok(Action::Hold) => {
                     let _ = match board.try_swap(){
-                        Ok(_) => (),
+                        Ok(_) => lock_timer = 0.0,
                         Err(_) => ()
                     };
                 },
                 Err(_) => ()
             };
             
-            last_fall += start.elapsed().as_secs_f32();
+            let time_delta = start.elapsed().as_secs_f32();
+            last_fall += time_delta;
+            lock_timer += time_delta;
             start = Instant::now();
-            if last_fall >= FALL_TIME as f32 {
+            if last_fall >= FALL_TIME {
                 match board.try_fall() {
-                    Ok(_) => (),
-                    Err(_) => board.lock_current_piece()
+                    Ok(_) => lock_timer = 0.0,
+                    Err(_) => {
+                        if lock_timer >= LOCK_DELAY {
+                            board.lock_current_piece();
+                        }
+                    }
                 }
                 last_fall = 0.0;
             }
@@ -81,7 +94,6 @@ impl GameManager {
             AsciiVisualizer::display(&board);
 
             thread::sleep(Duration::from_secs_f32(SLEEP_TIME));
-            last_fall += SLEEP_TIME;
         }
 
         keyboard_listener.join().unwrap();

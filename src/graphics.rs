@@ -6,9 +6,7 @@ pub trait Visualizer {
     fn display(board: &GameBoard);
 }
 
-pub struct AsciiVisualizer {
-    text: String
-}
+pub struct AsciiVisualizer;
 
 impl AsciiVisualizer {
 

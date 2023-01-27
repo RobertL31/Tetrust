@@ -36,11 +36,11 @@ impl PieceFactory {
     fn get_t_piece() -> Piece {
         let squares = [
             Square::new(
-                Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
+                SPAWN_POINT,
                 Color::Purple
             ),
             Square::new(
-                SPAWN_POINT,
+                Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
                 Color::Purple
             ),
             Square::new(
@@ -55,7 +55,7 @@ impl PieceFactory {
 
         Piece::new(
             squares,
-            RotationType::AroundSquare(squares[1]),
+            RotationType::AroundSquare,
             PieceType::T
         )
     }
@@ -63,11 +63,11 @@ impl PieceFactory {
     fn get_left_l_piece() -> Piece {
         let squares = [
             Square::new(
-                Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
+                SPAWN_POINT,
                 Color::DarkBlue
             ),
             Square::new(
-                SPAWN_POINT,
+                Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
                 Color::DarkBlue
             ),
             Square::new(
@@ -82,7 +82,7 @@ impl PieceFactory {
 
         Piece::new(
             squares,
-            RotationType::AroundSquare(squares[1]),
+            RotationType::AroundSquare,
             PieceType::LeftL
         )
     }
@@ -90,11 +90,11 @@ impl PieceFactory {
     fn get_right_l_piece() -> Piece {
         let squares = [
             Square::new(
-                Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
+                SPAWN_POINT,
                 Color::Orange
             ),
             Square::new(
-                SPAWN_POINT,
+                Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
                 Color::Orange
             ),
             Square::new(
@@ -109,7 +109,7 @@ impl PieceFactory {
 
         Piece::new(
             squares,
-            RotationType::AroundSquare(squares[1]),
+            RotationType::AroundSquare,
             PieceType::RightL
         )
     }
@@ -117,11 +117,11 @@ impl PieceFactory {
     fn get_left_skew_piece() -> Piece {
         let squares = [
             Square::new(
-                Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
+                SPAWN_POINT,
                 Color::Green
             ),
             Square::new(
-                SPAWN_POINT,
+                Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
                 Color::Green
             ),
             Square::new(
@@ -136,7 +136,7 @@ impl PieceFactory {
 
         Piece::new(
             squares,
-            RotationType::AroundSquare(squares[1]),
+            RotationType::AroundSquare,
             PieceType::LeftSkew
         )
     }
@@ -163,7 +163,7 @@ impl PieceFactory {
 
         Piece::new(
             squares,
-            RotationType::AroundSquare(squares[1]),
+            RotationType::AroundSquare,
             PieceType::RightSkew
         )
     }
@@ -190,7 +190,7 @@ impl PieceFactory {
 
         Piece::new(
             squares,
-            RotationType::AroundPoint(squares[2]),
+            RotationType::AroundPoint(SPAWN_POINT),
             PieceType::Square
         )
     }
@@ -198,11 +198,11 @@ impl PieceFactory {
     fn get_straight_piece() -> Piece {
         let squares = [
             Square::new(
-                Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
+                SPAWN_POINT,
                 Color::Cyan
             ),
             Square::new(
-                SPAWN_POINT,
+                Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y),
                 Color::Cyan
             ),
             Square::new(
@@ -217,7 +217,7 @@ impl PieceFactory {
 
         Piece::new(
             squares,
-            RotationType::AroundPoint(squares[1]),
+            RotationType::AroundPoint(SPAWN_POINT),
             PieceType::Straight
         )
     }

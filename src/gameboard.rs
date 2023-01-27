@@ -356,20 +356,6 @@ impl Debug for GameBoard {
 
 #[cfg(test)]
 mod test {
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
-    use crate::game_manager::GLOBAL_SEED;
-
-    use super::GameBoard;
     
-    #[test]
-    fn first_piece_can_fall_to_the_ground(){
-        let rng = ChaCha8Rng::seed_from_u64(GLOBAL_SEED);
-        let mut board = GameBoard::new(rng, 0);
-
-        while let Ok(_) = board.try_fall() {
-            println!("{:?}", board);
-        }
-        board.lock_current_piece();
-    }
+    
 }

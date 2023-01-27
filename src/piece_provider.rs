@@ -56,13 +56,12 @@ mod test {
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
     use crate::piece_factory::PieceType;
-    use crate::{game_manager::GLOBAL_SEED};
 
     use super::{PieceProvider, PieceBag};
     
     #[test]
     fn ten_first_pieces_are_the_same_for_same_seed(){
-        let rng1 = ChaCha8Rng::seed_from_u64(GLOBAL_SEED);
+        let rng1 = ChaCha8Rng::seed_from_u64(1);
         let rng2 = rng1.clone();
         let mut provider1 = PieceProvider::new(rng1);
         let mut provider2 = PieceProvider::new(rng2);
@@ -92,7 +91,7 @@ mod test {
 
     #[test]
     fn every_piece_in_a_bag_is_different() {
-        let mut rng = ChaCha8Rng::seed_from_u64(GLOBAL_SEED);
+        let mut rng = ChaCha8Rng::seed_from_u64(1);
         let mut bag = PieceBag::new(&mut rng);
         let mut pieces = vec![];
         while let Some(piece) = bag.get_piece(){

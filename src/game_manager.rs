@@ -2,7 +2,7 @@
 use std::{io::stdin, thread, time::{Duration, Instant}, sync::mpsc::{self}};
 
 use console::Term;
-use rand::SeedableRng;
+use rand::{SeedableRng, Rng};
 use rand_chacha::ChaCha8Rng;
 
 use crate::{gameboard::{GameBoard, MovementDirection, Action}, graphics::{AsciiVisualizer, Visualizer}};
@@ -18,9 +18,10 @@ impl GameManager {
 
     pub fn start() {
 
+        let seed = rand::thread_rng().gen::<u64>();
         let stdout = Term::buffered_stdout();
-        let rng = ChaCha8Rng::seed_from_u64(GLOBAL_SEED);
-        let mut level = 0;
+        let rng = ChaCha8Rng::seed_from_u64(seed);
+        let mut level = 1;
         let mut board = GameBoard::new(rng, level);
 
         let (to_main, from_thread) = mpsc::channel::<Action>();

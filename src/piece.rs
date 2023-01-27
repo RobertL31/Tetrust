@@ -58,8 +58,8 @@ impl Square {
     }
 
 
-    pub fn get_color(&self) -> &Color{
-        &self.color
+    pub fn get_color(&self) -> Color{
+        self.color
     }
 
 
@@ -96,7 +96,7 @@ pub enum RotationType {
     AroundPoint(Vector2<isize>)
 }
 
-
+#[derive(Clone)]
 pub struct Piece {
     squares: [Square; 4],
     rotation: RotationType,
@@ -164,6 +164,17 @@ impl Piece {
 
     pub fn has_same_type(&self, other: &Piece) -> bool {
         self.piece_type == other.piece_type
+    }
+
+
+    pub fn to_array(mut self) -> [[bool; 4]; 2] {
+        let mut piece_holder = [[false; 4]; 2];
+        self.move_at(Vector2::new(1,0));
+        for square in self.squares {
+            let position = square.get_position();
+            piece_holder[position.y as usize][position.x as usize] = true;
+        }
+        piece_holder
     }
 
 }

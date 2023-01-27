@@ -75,7 +75,7 @@ impl PieceFactory {
                 Color::DarkBlue
             ),
             Square::new(
-                Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y - 1),
+                Vector2::new(SPAWN_POINT.x - 1, SPAWN_POINT.y + 1),
                 Color::DarkBlue
             )
         ];

@@ -93,8 +93,6 @@ impl GameManager {
             }
 
             AsciiVisualizer::display(&board);
-
-            thread::sleep(Duration::from_secs_f32(SLEEP_TIME));
         }
 
         keyboard_listener.join().unwrap();

@@ -112,6 +112,16 @@ impl GameBoard {
     }
 
 
+    pub fn get_held_piece(&self) -> &Option<Piece> {
+        &self.held_piece
+    }
+
+
+    pub fn get_next_piece(&self) -> &Piece {
+        &self.next_pieces.front().unwrap()
+    }
+
+
     pub fn set_level(&mut self, value: u32) {
         self.level = value;
     }

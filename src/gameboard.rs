@@ -42,6 +42,14 @@ pub enum MovementDirection {
     Bottom
 }
 
+
+enum PossibleRotation {
+    None, 
+    Regular, 
+    Right,
+    Left
+}
+
 unsafe impl Send for MovementDirection {}
 unsafe impl Sync for MovementDirection {}
 
@@ -156,17 +164,42 @@ impl GameBoard {
     }
 
 
-    fn can_rotate(&self) -> bool {
+    fn can_rotate(&self) -> PossibleRotation {
         if self.current_piece.get_piece_type() == PieceType::Square {
-            return false;
+            return PossibleRotation::None;
         }
 
-        self.current_piece.get_squares().iter().all(|square| {
+        let rotated_positions = self.current_piece.get_squares().iter().map(|square| {
             let rotation_type = self.current_piece.get_rotation_type();
             let pivot = self.current_piece.get_squares()[0].get_position();
-            let new_position = square.get_rotated_position(rotation_type, pivot);
-            self.is_free(new_position)
-        })
+            square.get_rotated_position(rotation_type, pivot)
+        }).collect::<Vec<_>>();
+
+        let can_rotate = rotated_positions.iter().all(|position| {
+            self.is_free(*position)
+        });
+
+        if can_rotate {
+            return PossibleRotation::Regular;
+        }
+
+        let can_rotate_right = rotated_positions.iter().all(|position| {
+            self.is_free(*position + Vector2::new(1,0))
+        });
+
+        if can_rotate_right {
+            return PossibleRotation::Right;
+        }
+
+        let can_rotate_right = rotated_positions.iter().all(|position| {
+            self.is_free(*position + Vector2::new(-1,0))
+        });
+
+        if can_rotate_right {
+            return PossibleRotation::Left;
+        }
+       
+        PossibleRotation::None
     }
 
 
@@ -297,15 +330,24 @@ impl GameBoard {
     pub fn try_fall(&mut self) -> Result<(), FallError> {
         self.can_fall().then(|| {
             self.current_piece.translate(Vector2::new(0,-1));
-
         }).ok_or(FallError)
     }
 
 
     pub fn try_rotate(&mut self) -> Result<(), RotateError> {
-        self.can_rotate().then(|| {
-            self.current_piece.rotate();
-        }).ok_or(RotateError)
+        let _ = match self.can_rotate() {
+            PossibleRotation::Regular => self.current_piece.rotate(),
+            PossibleRotation::Right => {
+                self.current_piece.translate(Vector2::new(1,0));
+                self.current_piece.rotate();
+            },
+            PossibleRotation::Left => {
+                self.current_piece.translate(Vector2::new(-1,0));
+                self.current_piece.rotate();
+            },
+            PossibleRotation::None => return Err(RotateError)
+        };
+        Ok(())
     }
 
 

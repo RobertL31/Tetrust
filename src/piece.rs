@@ -100,7 +100,8 @@ pub enum RotationType {
 pub struct Piece {
     squares: [Square; 4],
     rotation: RotationType,
-    piece_type: PieceType
+    piece_type: PieceType,
+    rotation_position: u8
 }
 
 impl Piece {
@@ -109,7 +110,8 @@ impl Piece {
         Piece {
             squares,
             rotation,
-            piece_type
+            piece_type,
+            rotation_position: 0
         }
     }
 
@@ -154,11 +156,24 @@ impl Piece {
     }
 
 
+    pub fn to_initial_rotation(&mut self) {
+        if self.rotation_position == 0 {
+            return;
+        }
+
+        let needed_rotation = 4 - self.rotation_position;
+        for _ in 0..needed_rotation {
+            self.rotate();
+        }
+    }
+
+
     pub fn rotate(&mut self) {
         let pivot = self.squares[0].get_position();
         for square in self.squares.iter_mut() {
             square.set_position(square.get_rotated_position(self.rotation, pivot))
         }
+        self.rotation_position  = (self.rotation_position + 1) % 4;
     }
 
 

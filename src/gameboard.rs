@@ -268,6 +268,7 @@ impl GameBoard {
 
 
     fn swap_held_piece(&mut self) {
+        self.current_piece.to_initial_rotation();
         match self.held_piece {
             Some(_) => {
                 self.current_piece.move_at(PLAY_POINT);

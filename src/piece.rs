@@ -93,6 +93,7 @@ impl Debug for Square {
 #[derive(Copy, Clone, Debug)]
 pub enum RotationType {
     AroundSquare,
+    //TODO: should not reference an owned point but rather update according to some reference (squares[0])
     AroundPoint(Vector2<isize>)
 }
 
@@ -241,14 +242,15 @@ mod test {
         assert_eq!(result, Vector2::new(5, 5));
     }
 
+    //FIXME: not working test, rotation looks bad
     #[test]
     fn rotation_of_square_90_around_point_is_correct(){
         let sut = Square::new(
             Vector2::new(4, 4),
             Color::Cyan
         );
-        let rotation_type = RotationType::AroundPoint(Vector2::new(2, 2));
         let pivot = Vector2::new(2, 2);
+        let rotation_type = RotationType::AroundPoint(pivot);
 
         let result = sut.get_rotated_position(rotation_type, pivot);
 

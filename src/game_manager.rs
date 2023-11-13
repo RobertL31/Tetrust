@@ -5,7 +5,7 @@ use console::Term;
 use rand::{SeedableRng, Rng};
 use rand_chacha::ChaCha8Rng;
 
-use crate::{gameboard::{GameBoard, MovementDirection, Action}, graphics::{AsciiVisualizer, Visualizer}};
+use crate::{gameboard::{GameBoard, Direction, Action}, graphics::{AsciiVisualizer, Visualizer}};
 
 pub const FPS: u32 = 120;
 pub const SLEEP_TIME: f32 = 1.0/FPS as f32;
@@ -27,14 +27,17 @@ impl GameManager {
         let mut board = GameBoard::new(rng, level);
 
         let (to_main, from_thread) = mpsc::channel::<Action>();
+        //TODO: move to own function / file
+        //TODO: create config file for inputs
+        //FIXME: add main to thread communication to notify end of game
         let keyboard_listener = thread::spawn(move || {
             loop {
                 if let Ok(character) = stdout.read_char() {
                     let _ = match character {
-                        ' ' => to_main.send(Action::Move(MovementDirection::Top)),
-                        'q' => to_main.send(Action::Move(MovementDirection::Left)),
-                        's' => to_main.send(Action::Move(MovementDirection::Bottom)),
-                        'd' => to_main.send(Action::Move(MovementDirection::Right)),
+                        ' ' => to_main.send(Action::Move(Direction::Top)),
+                        'q' => to_main.send(Action::Move(Direction::Left)),
+                        's' => to_main.send(Action::Move(Direction::Bottom)),
+                        'd' => to_main.send(Action::Move(Direction::Right)),
                         'z' => to_main.send(Action::Rotate),
                         '\n' => to_main.send(Action::Hold),
                         _ => Ok(())
@@ -57,7 +60,7 @@ impl GameManager {
                     let _ = match board.try_move(movement) {
                         Ok(_) => {
                             match movement {
-                                MovementDirection::Top => {
+                                Direction::Top => {
                                     lock_timer = lock_delay;
                                     last_fall = fall_time;
                                 }
@@ -119,9 +122,8 @@ impl GameManager {
                 update = false;
             }
         }
-
+        
         keyboard_listener.join().unwrap();
-
         GameManager::end();
     }
 

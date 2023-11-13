@@ -1,6 +1,6 @@
 
 use std::collections::BTreeSet;
-use std::{collections::VecDeque};
+use std::collections::VecDeque;
 use std::fmt::{Debug, Write};
 
 use kiss3d::nalgebra::Vector2;
@@ -20,6 +20,11 @@ const HARD_DROP_SCORE: u32 = 2;
 
 const PIECE_QUEUE_SIZE: usize = 5;
 
+const SINGLE_LINE_POINTS: u32 = 100;
+const DOUBLE_LINE_POINTS: u32 = 300;
+const TRIPLE_LINE_POINTS: u32 = 500;
+const TETRIS_POINTS: u32 = 800;
+
 pub struct GameBoard {
     square_board: [[Option<Square>; BOARD_HEIGHT]; BOARD_WIDTH],
     space_board: [[bool; BOARD_HEIGHT]; BOARD_WIDTH],
@@ -35,7 +40,7 @@ pub struct GameBoard {
 }
 
 #[derive(Copy, Clone)]
-pub enum MovementDirection {
+pub enum Direction {
     Right,
     Top,
     Left,
@@ -43,19 +48,19 @@ pub enum MovementDirection {
 }
 
 
-enum PossibleRotation {
+enum Rotation {
     None, 
     Regular, 
     Right,
     Left
 }
 
-unsafe impl Send for MovementDirection {}
-unsafe impl Sync for MovementDirection {}
+unsafe impl Send for Direction {}
+unsafe impl Sync for Direction {}
 
 
 pub enum Action {
-    Move(MovementDirection),
+    Move(Direction),
     Rotate,
     Hold
 }
@@ -67,6 +72,7 @@ pub struct FallError;
 pub struct RotateError;
 pub struct MoveError;
 pub struct SwapError;
+
 
 impl GameBoard {
 
@@ -163,12 +169,13 @@ impl GameBoard {
         })
     }
 
-
-    fn can_rotate(&self) -> PossibleRotation {
+    //TODO: implement proper wall-kick logic
+    fn can_rotate(&self) -> Rotation {
         if self.current_piece.get_piece_type() == PieceType::Square {
-            return PossibleRotation::None;
+            return Rotation::None;
         }
 
+        //TODO: Move rotated position from square to piece (no sens to rotate a square alone)
         let rotated_positions = self.current_piece.get_squares().iter().map(|square| {
             let rotation_type = self.current_piece.get_rotation_type();
             let pivot = self.current_piece.get_squares()[0].get_position();
@@ -180,7 +187,7 @@ impl GameBoard {
         });
 
         if can_rotate {
-            return PossibleRotation::Regular;
+            return Rotation::Regular;
         }
 
         let can_rotate_right = rotated_positions.iter().all(|position| {
@@ -188,7 +195,7 @@ impl GameBoard {
         });
 
         if can_rotate_right {
-            return PossibleRotation::Right;
+            return Rotation::Right;
         }
 
         let can_rotate_right = rotated_positions.iter().all(|position| {
@@ -196,27 +203,27 @@ impl GameBoard {
         });
 
         if can_rotate_right {
-            return PossibleRotation::Left;
+            return Rotation::Left;
         }
        
-        PossibleRotation::None
+        Rotation::None
     }
 
 
-    fn can_move(&self, direction: MovementDirection) -> bool {
+    fn can_move(&self, direction: Direction) -> bool {
         match direction {
-            MovementDirection::Left => 
+            Direction::Left => 
                 self.current_piece.get_squares().iter().all(|square| {
                     let position = square.get_position();
                     self.is_free(Vector2::new(position[0]-1, position[1]))
                 }),
-            MovementDirection::Right => 
+            Direction::Right => 
                 self.current_piece.get_squares().iter().all(|square| {
                     let position = square.get_position();
                     self.is_free(Vector2::new(position[0]+1, position[1]))
                 }),
-            MovementDirection::Bottom => self.can_fall(),
-            MovementDirection::Top => self.can_fall()
+            Direction::Bottom => self.can_fall(),
+            Direction::Top => self.can_fall()
         }
     }
 
@@ -266,6 +273,7 @@ impl GameBoard {
 
 
     // Usage of BTreeSet allows the collection to be sorted for destruction
+    //TODO: Optimize to destroy multiple lines at once
     fn check_complete_line(&mut self, line_indexes: BTreeSet<usize>) {
         let mut cleared = 0;
         for line_index in line_indexes.iter().rev() {
@@ -275,11 +283,13 @@ impl GameBoard {
             }
         }
 
+        
+
         self.score += match cleared {
-            1 => 100 * self.level,
-            2 => 300 * self.level,
-            3 => 500 * self.level,
-            4 => 800 * self.level,
+            1 => SINGLE_LINE_POINTS * self.level,
+            2 => DOUBLE_LINE_POINTS * self.level,
+            3 => TRIPLE_LINE_POINTS * self.level,
+            4 => TETRIS_POINTS * self.level,
             _ => 0
         }
     }
@@ -308,7 +318,8 @@ impl GameBoard {
                 std::mem::swap(&mut self.current_piece, self.held_piece.as_mut().unwrap())
             }
             None => {
-                // Weird but only way found for the moment
+                //TODO: properly code that crap
+                // Just help_piece = some(piece) and gg ?
                 self.current_piece.move_at(PLAY_POINT);
                 let dummy_piece = Piece::from(PieceType::Square);
                 self.held_piece = Some(dummy_piece);
@@ -333,33 +344,33 @@ impl GameBoard {
         }).ok_or(FallError)
     }
 
-
+    //TODO: properly implement wall-kick
     pub fn try_rotate(&mut self) -> Result<(), RotateError> {
         let _ = match self.can_rotate() {
-            PossibleRotation::Regular => self.current_piece.rotate(),
-            PossibleRotation::Right => {
+            Rotation::Regular => self.current_piece.rotate(),
+            Rotation::Right => {
                 self.current_piece.translate(Vector2::new(1,0));
                 self.current_piece.rotate();
             },
-            PossibleRotation::Left => {
+            Rotation::Left => {
                 self.current_piece.translate(Vector2::new(-1,0));
                 self.current_piece.rotate();
             },
-            PossibleRotation::None => return Err(RotateError)
+            Rotation::None => return Err(RotateError)
         };
         Ok(())
     }
 
 
-    fn move_at(&mut self, direction: MovementDirection) {
+    fn move_at(&mut self, direction: Direction) {
         match direction {
-            MovementDirection::Left   => self.current_piece.translate(Vector2::new(-1, 0)),
-            MovementDirection::Right  => self.current_piece.translate(Vector2::new(1, 0)),
-            MovementDirection::Bottom => {
+            Direction::Left => self.current_piece.translate(Vector2::new(-1, 0)),
+            Direction::Right => self.current_piece.translate(Vector2::new(1, 0)),
+            Direction::Bottom => {
                 self.current_piece.translate(Vector2::new(0, -1));
                 self.score += SOFT_DROP_SCORE;
             },
-            MovementDirection::Top => {
+            Direction::Top => {
                 while let Ok(_) = self.try_fall() {
                     self.score += HARD_DROP_SCORE;
                 }
@@ -368,7 +379,7 @@ impl GameBoard {
     }
 
 
-    pub fn try_move(&mut self, direction: MovementDirection) -> Result<(), MoveError> {
+    pub fn try_move(&mut self, direction: Direction) -> Result<(), MoveError> {
         self.can_move(direction).then(|| {
             self.move_at(direction);
         }).ok_or(MoveError)

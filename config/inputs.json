@@ -1,0 +1,8 @@
+{
+    "hard_drop" : " ",
+    "soft_drop" : "s",
+    "right" : "d",
+    "left" : "a",
+    "rotate" : "w",
+    "hold" : "\n"
+}

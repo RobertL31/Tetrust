@@ -5,7 +5,11 @@ use console::Term;
 use rand::{SeedableRng, Rng};
 use rand_chacha::ChaCha8Rng;
 
-use crate::{gameboard::{GameBoard, Direction, Action}, graphics::{AsciiVisualizer, Visualizer}};
+use crate::{
+    gameboard::{Action, Direction, GameBoard},
+    graphics::{AsciiVisualizer, Visualizer},
+    setup::CONFIG_INPUT_LABELS
+};
 
 pub const FPS: u32 = 120;
 pub const SLEEP_TIME: f32 = 1.0/FPS as f32;
@@ -15,7 +19,7 @@ pub struct GameManager;
 
 impl GameManager {
 
-    pub fn start() {
+    pub fn start(config: config::Config) {
 
         let mut fall_time = 1.0 / 4.0;
         let mut lock_delay = 1.5 * fall_time;
@@ -30,18 +34,17 @@ impl GameManager {
         //TODO: move to own function / file
         //TODO: create config file for inputs
         //FIXME: add main to thread communication to notify end of game
+        let thread_config = config.clone();
+        let thread_config_input_labels = CONFIG_INPUT_LABELS.clone();
         let keyboard_listener = thread::spawn(move || {
             loop {
                 if let Ok(character) = stdout.read_char() {
-                    let _ = match character {
-                        ' ' => to_main.send(Action::Move(Direction::Top)),
-                        'q' => to_main.send(Action::Move(Direction::Left)),
-                        's' => to_main.send(Action::Move(Direction::Bottom)),
-                        'd' => to_main.send(Action::Move(Direction::Right)),
-                        'z' => to_main.send(Action::Rotate),
-                        '\n' => to_main.send(Action::Hold),
-                        _ => Ok(())
-                    };
+                    for action in thread_config_input_labels.keys() {
+                        if character == thread_config.get(thread_config_input_labels[action]).unwrap() {
+                            to_main.send(*action).unwrap();
+                            break;
+                        }
+                    }
                 }
             }
         });
@@ -124,11 +127,11 @@ impl GameManager {
         }
         
         keyboard_listener.join().unwrap();
-        GameManager::end();
+        GameManager::end(config);
     }
 
 
-    pub fn end() {
+    pub fn end(config: config::Config) {
         
         let mut s=String::new();
         println!("Please enter some text: ");
@@ -141,7 +144,7 @@ impl GameManager {
         }
         
         if let Some('r') = s.chars().next_back() {
-            GameManager::start();
+            GameManager::start(config);
         }
     }
 

@@ -22,6 +22,10 @@ colored = "2.0.0"
 # console inputs 
 console = "0.15.5"
 
+# config management
+config = "0.14.0"
+
+lazy_static = "1.4.0"
 
 
 

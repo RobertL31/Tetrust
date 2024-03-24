@@ -39,7 +39,7 @@ pub struct GameBoard {
     game_over: bool
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Direction {
     Right,
     Top,
@@ -59,11 +59,13 @@ unsafe impl Send for Direction {}
 unsafe impl Sync for Direction {}
 
 
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Action {
     Move(Direction),
     Rotate,
     Hold
 }
+
 
 unsafe impl Send for Action {}
 unsafe impl Sync for Action {}
